@@ -1,0 +1,40 @@
+version: "3"
+services:
+  db:
+    container_name: postgres-container
+    image: postgres:alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_URL=${DATABASE_URL}
+  redis:
+    container_name: redis-container
+    image: redis:alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_URL=${REDIS_TLS_URL}
+  api:
+    container_name: api-container
+    image: node:16
+    working_dir: /usr/src/secret-wave-02643
+    restart: always
+    command: bash -c "npm install --only=prod && npm run debug"
+    environment:
+      - POSTGRES_URL=${HEROKU_POSTGRESQL_ROSE_URL}
+    volumes:
+      - ./dist/:/usr/src/secret-wave-02643/dist/
+      - ./package.json:/usr/src/secret-wave-02643/package.json
+    ports:
+      - "${PORT}:${PORT}"
+      - "8080:8080"
+    links:
+      - db
+    depends_on:
+      - db
+networks:
+  default:
+    external:
+      name: heroku
